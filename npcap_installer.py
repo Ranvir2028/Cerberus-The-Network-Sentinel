@@ -1,9 +1,8 @@
 """
-Well this is a pain but here we are making a seperate extra module because windows sucks for the netowrk driver for the "Npcap".
+I build this module for the Npcap driver installation because windows dosent have any built in which send & recieve raw packets
+so they needs to install Npcap manually by going to browser and then install it but, this script will do that work.
 
-So, this is basically a Npcap Installer or say auto-installer which will be both a automatically or if you dont want then it will guide you to install the Npcap.
-
-Also with this i got a lesson to learn that “An error/flaw in the code sometimes shows the part of the human who made it” waah kya likha hai mene😎🫡😌.
+So, this is basically a Npcap Installer or say auto-installer which will be both a automatically or if you dont want, then it will guide you to install the Npcap.
 Features:
     1} Checks if Npcap is already installed (multiple methods)
     2} Downloads latest Npcap installer
@@ -35,9 +34,7 @@ except ImportError:
     CERBERUS_LOGGER_AVAILABLE = False
     logger.warning("Cerberus_logger not found, using standard logging.")
 
-# ============================================================================
-# Npcap Installer Class
-# ============================================================================
+# ========================= Npcap Installer Class =========================
 
 class NpcapInstaller:
     """
@@ -47,18 +44,14 @@ class NpcapInstaller:
     NPCAP_DOWNLOAD_URL = "https://npcap.com/dist/npcap-1.79.exe"
     NPCAP_FILE_NAME = "npcap_installer.exe"
 
-    # ------------------------------------------------------------------------
-    # Platform Detection
-    # ------------------------------------------------------------------------
+# ------------------------- Platform Detection -------------------------
 
     @staticmethod
     def is_windows() -> bool:
         """Checks if running on windows."""
         return platform.system() == "Windows"
     
-    # ------------------------------------------------------------------------
-    # Installation Detection
-    # ------------------------------------------------------------------------
+    # ------------------------- Installation Detection -------------------------
 
     @staticmethod
     def is_npcap_installed() -> Tuple[bool, str]:
@@ -105,9 +98,7 @@ class NpcapInstaller:
                 logger.debug(f"Npcap detected in file system: {path}.")
                 return True, f"File system: {path}."
     
-    # ------------------------------------------------------------------------
-    # Privilege Check
-    # ------------------------------------------------------------------------
+    # ------------------------- Privilege Check -------------------------
     
     @staticmethod
     def check_admin_rights() -> bool:
@@ -125,9 +116,7 @@ class NpcapInstaller:
             logger.error(f"Admin rights check failed: {e}.")
             return False
 
-    # ------------------------------------------------------------------------
-    # Download Management (with proper logging)
-    # ------------------------------------------------------------------------
+    # ------------------------- Download Management -------------------------
 
     @staticmethod
     def download_with_progress(url: str, destination: str) -> bool:
@@ -190,8 +179,7 @@ class NpcapInstaller:
                         downloaded += len(chunk)    # Updates our counter
                         # Example: After first chunk → downloaded = 8192 bytes
                         
-                        # So yaha pe dimag jane vala hai vo bhi bohot bura vala aur haa ye Display progress bas hai
-                        # Progress Bar Logic
+                        # Progress Bar Logic: thoda sa dimag kharab kiya isne
                         if total_size > 0:
                             percent = (downloaded / total_size) * 100    # Calculates percentage: (8192 / 5,242,880) × 100 = 0.16%
                             bar_length = 40    # Our progress bar is 40 characters wide 
@@ -254,9 +242,7 @@ class NpcapInstaller:
             logger.error("Npcap download failed.")
             return None
     
-    # ------------------------------------------------------------------------
-    # Installation (with proper logging)
-    # ------------------------------------------------------------------------
+    # ------------------------- Installation -------------------------
     
     @staticmethod
     def install_npcap(installer_path: str, silent: bool = True) -> Tuple[bool, str]:
@@ -325,9 +311,7 @@ class NpcapInstaller:
             logger.error(error_msg)
             return False, error_msg
     
-    # ------------------------------------------------------------------------
-    # Complete Installation Flow
-    # ------------------------------------------------------------------------
+    # ------------------------- Complete Installation Flow -------------------------
 
     @staticmethod
     def install_if_needed(force_check: bool = False) -> Tuple[bool, str, bool]:
@@ -369,7 +353,7 @@ class NpcapInstaller:
         logger.info("Starting Npcap installation...")
         success, message = NpcapInstaller.install_npcap(installer_path, silent=True)
         
-        # It will clean do the cleanup part like removing/deleting temporary files that was made during the installation.
+        # It will do the cleanup part like removing/deleting temporary files that was made during the installation.
         try:
             os.remove(installer_path)
             logger.debug("Cleaned up temporary installer file.")
@@ -383,9 +367,7 @@ class NpcapInstaller:
             logger.error(f"Npcap installation failed: {message}.")
             return False, f"Installation failed: {message}.", False
 
-# ============================================================================
-# User Interface Functions
-# ============================================================================
+# ========================= User Interface Functions =========================
 
 def show_npcap_banner():
     """Display Npcap information banner."""
@@ -467,7 +449,7 @@ def handle_npcap_installation() -> bool:
     
     logger.info("Windows platform detected - checking Npcap...")
     
-    # Check if already installed
+    # Check if already installed.
     installed, method = NpcapInstaller.is_npcap_installed()
     if installed:
         logger.info(f"✔️ Npcap already installed: {method}.")
@@ -475,15 +457,15 @@ def handle_npcap_installation() -> bool:
     
     logger.warning("Npcap not detected - presenting installation options to user.")
     
-    # Show banner and get user choice
+    # Show banner and get user choice.
     show_npcap_banner()
     choice = prompt_user_for_installation()
     
     if choice == "auto":
-        # Auto installation
+        # Auto installation.
         logger.info("Initiating auto-installation process.")
         
-        # Check admin rights
+        # Check admin rights.
         if not NpcapInstaller.check_admin_rights():
             logger.error("Auto-installation failed: Administrator privileges required.")
             print("\n❌ ADMINISTRATOR PRIVILEGES REQUIRED")
@@ -529,7 +511,7 @@ def handle_npcap_installation() -> bool:
                 return False
     
     if choice == "manual":
-        # Open browser to Npcap website
+        # Open browser to Npcap website.
         logger.info("Opening Npcap website for manual installation")
         print("\n🌐 OPENING NPCAP WEBSITE...")
         try:
@@ -570,13 +552,10 @@ def handle_npcap_installation() -> bool:
     return False
 
 
-# ============================================================================
-# Command Line Interface
-# ============================================================================
+# ========================= Command Line Interface =========================
 
 def main():
     """Command-line entry point for testing."""
-    # Initialize cerberus_logger if available
     if not CERBERUS_LOGGER_AVAILABLE:
         print("⚠️ cerberus_logger not found - using basic logging")
     
@@ -594,11 +573,8 @@ def main():
     
     print("\n" + "="*70)
 
-# ============================================================================
-# Module Initialization
-# ============================================================================
+# ========================= Module Initialization =========================
 
-# When imported, log that the module was loaded successfully
 logger.info("Npcap installer module loaded successfully")
 
 
