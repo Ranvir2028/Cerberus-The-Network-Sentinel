@@ -3,6 +3,16 @@ import time
 import json
 import cerberus_logger
 from router_detector import RouterDetector
+from npcap_installer import handle_npcap_installation
+import platform
+import sys
+
+# Import npcap installer for Windows compatibility
+try:
+    NPCAP_INSTALLER_AVAILABLE = True
+except ImportError:
+    NPCAP_INSTALLER_AVAILABLE = False
+    print("⚠️ Warning: npcap_installer module not found. Windows users may need to install Npcap manually.")
 
 # CONFIGURATION
 KNOWN_DEVICES_FILE = "known_devices.json"
@@ -48,7 +58,7 @@ def scan_network():
         logger.debug(f"Wake-up call failed (non-critical): {e}.")
 
     try:
-        # ARP Scan rahega hi taki scapy sabko packet bhej sake 
+        # ARP Scan rahega hi taki scapy sabko packet bhej sake. 
         arp_request = ARP(pdst=TARGET_NETWORK)
         ether_frame = Ether(dst="ff:ff:ff:ff:ff:ff")
         packet = ether_frame / arp_request
@@ -138,6 +148,54 @@ def surveillance_mode(known_macs):
         logger.exception("Error in surveillance.")
         raise
 
+def check_npcap_requirement():
+    """
+    Check and handle Npcap installation on Windows.
+    Returns True if ready to proceed, False if should exit.
+    """
+    # Only check on Windows
+    
+    if platform.system() != "Windows":
+        logger.info("Non-Windows platform detected - Npcap not required.")
+        return True
+    
+    logger.info("Windows platform detected - checking Npcap availability...")
+    
+    if not NPCAP_INSTALLER_AVAILABLE:
+        logger.warning("Npcap installer module not available.")
+        print("\n" + "="*70)
+        print("⚠️  WINDOWS USERS: NPCAP REQUIRED")
+        print("="*70)
+        print("\nCerberus requires Npcap for network scanning on Windows.")
+        print("Please download and install Npcap from: https://npcap.com/")
+        print("\nAfter installation, restart this program.")
+        print("="*70)
+        
+        choice = input("\nContinue anyway with limited functionality? (y/n): ").lower()
+        if choice != 'y':
+            logger.info("User chose to exit for Npcap installation.")
+            return False
+        logger.warning("User chose to continue without Npcap verification.")
+        return True
+    
+    # Use the npcap installer's interactive installation flow
+    try:
+        npcap_ready = handle_npcap_installation()
+        
+        if not npcap_ready:
+            logger.error("Npcap installation/setup failed or was cancelled.")
+            return False
+        
+        logger.info("Npcap is ready - proceeding with Cerberus.")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error during Npcap check: {e}")
+        print(f"\n❌ Error checking Npcap: {e}")
+        print("You may need to install Npcap manually from: https://npcap.com/")
+        
+        choice = input("\nContinue anyway? (y/n): ").lower()
+        return choice == 'y'
 
 
 def main():
@@ -146,6 +204,11 @@ def main():
     logger.info("PROJECT CERBERUS: The Network Sentinel")
     logger.info("=" * 50)
     
+    # CRITICAL: Check Npcap on Windows BEFORE attempting any scans.
+    if not check_npcap_requirement():
+        logger.info("Exiting due to Npcap requirement not met.")
+        sys.exit(0)
+
     # Ye auto detect karega router_detector module ki madad se.
     detector = RouterDetector()
     network_info = detector.get_network_info()
